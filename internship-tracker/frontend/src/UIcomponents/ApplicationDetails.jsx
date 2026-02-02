@@ -12,8 +12,17 @@ const ApplicationDetails = () => {
   const fetchDetails = async () => {
     try {
       const response = await axios.get(`http://localhost:5000/applications/detail/${id}`);
-      setDetails(response.data);
-      setEditData(response.data); // Initialize form with current data
+      const data = response.data;
+      const safeData = {
+        ...data,
+        company_name: data.company_name || "",
+        role: data.role || "",
+        location: data.location || "",
+        stipend: data.stipend || "",
+        notes: data.notes || ""
+      };
+      setDetails(data);
+      setEditData(safeData); // Initialize form with current data
     } catch (err) {
       console.error("Could not fetch details");
     }

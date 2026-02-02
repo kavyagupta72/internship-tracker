@@ -6,7 +6,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token'); // Clear the "ID Card"
-    navigate('/login'); // Redirect to login
+    navigate('/'); // Redirect to login
   };
 
   return (

@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import Home from './UIcomponents/Home'
 import Login from './UIcomponents/Login';
 import Signup from './UIcomponents/Signup';
 import Dashboard from './UIcomponents/Dashboard';
@@ -38,7 +39,7 @@ function App() {
           />
 
           {/* Redirect any unknown path or the root path to Login */}
-          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/" element={<Home />} />
         </Routes>
       </div>
     </Router>
