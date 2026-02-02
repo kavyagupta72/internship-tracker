@@ -10,7 +10,7 @@ const Signup = () => {
     e.preventDefault();
     try {
       // Sending data to your backend
-      const res = await axios.post('http://localhost:5000/auth/signup', formData);
+      const res = await axios.post('https://internship-tracker-z3x4.onrender.com/auth/signup', formData);
       
       // Store the token and go to dashboard
       localStorage.setItem('token', res.data.token);

@@ -5,7 +5,9 @@ const app = express();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-app.use(cors());
+app.use(cors({
+  origin: "https://your-frontend-url.vercel.app" 
+}));
 app.use(express.json()); // Allows us to read JSON data sent by the frontend
 
 // ROUTE: Get all applications for a specific user

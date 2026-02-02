@@ -16,7 +16,7 @@ const AddInternship = ({ onAdd }) => {
       const token = localStorage.getItem('token');
       // Note: We are using user_id 1 for now. 
       // Later we will decode the token to get the real ID!
-      const res = await axios.post('http://localhost:5000/applications', 
+      const res = await axios.post('https://internship-tracker-z3x4.onrender.com/applications', 
         { ...formData, user_id: 1 }, 
         { headers: { token: token } }
       );

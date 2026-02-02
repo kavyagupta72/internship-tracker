@@ -32,7 +32,7 @@ const ApplicationDetails = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`http://localhost:5000/applications/${id}`, editData);
+      await axios.put(`https://internship-tracker-z3x4.onrender.com/applications/${id}`, editData);
       setDetails(editData);
       setIsEditing(false); // Switch back to view mode
       alert("Changes saved!");
@@ -118,7 +118,7 @@ const ApplicationDetails = () => {
           <button 
             onClick={async () => {
               if(window.confirm("Delete this?")) {
-                await axios.delete(`http://localhost:5000/applications/${id}`);
+                await axios.delete(`https://internship-tracker-z3x4.onrender.com/applications/${id}`);
                 navigate('/dashboard');
               }
             }}

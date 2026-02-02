@@ -12,7 +12,7 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       // Using user_id 1 for now until we handle dynamic IDs
-      const response = await axios.get('http://localhost:5000/applications/1', {
+      const response = await axios.get('https://internship-tracker-z3x4.onrender.com/applications/1', {
         headers: { token: token }
       });
       setApplications(response.data);
@@ -24,7 +24,7 @@ const Dashboard = () => {
   const deleteApplication = async (id) => {
     if (window.confirm("Are you sure you want to delete this application?")) {
       try {
-        await axios.delete(`http://localhost:5000/applications/${id}`);
+        await axios.delete(`https://internship-tracker-z3x4.onrender.com/applications/${id}`);
         setApplications(applications.filter(app => app.id !== id));
       } catch (err) {
         console.error("Delete failed:", err);
@@ -34,7 +34,7 @@ const Dashboard = () => {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await axios.put(`http://localhost:5000/applications/${id}`, {
+      await axios.put(`https://internship-tracker-z3x4.onrender.com/applications/${id}`, {
         status: newStatus
       });
       setApplications(applications.map(app => 
