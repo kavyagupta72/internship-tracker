@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
+import { apiClient } from '../api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -10,11 +10,15 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://internship-tracker-z3x4.onrender.com/auth/login', { email, password });
+      const res = await apiClient.post('/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       navigate('/dashboard');
     } catch (err) {
-      alert(err.response?.data || "Invalid Credentials");
+      const errorMessage =
+        err.response?.data ||
+        err.message ||
+        "Invalid credentials";
+      alert(errorMessage);
     }
   };
   useEffect(() => {
