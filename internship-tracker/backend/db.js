@@ -1,13 +1,12 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// The Pool handles multiple connections so your app doesn't crash
+// Use connection string for cloud DB (Neon/Render)
 const pool = new Pool({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 module.exports = pool;
