@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../api';
 import AddInternship from './AddInternship'; 
 import Navbar from './Navbar';
 
@@ -12,7 +12,7 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem('token');
       // Using user_id 1 for now until we handle dynamic IDs
-      const response = await axios.get('https://internship-tracker-z3x4.onrender.com/applications/1', {
+      const response = await apiClient.get('/applications/1', {
         headers: { token: token }
       });
       setApplications(response.data);
@@ -24,7 +24,7 @@ const Dashboard = () => {
   const deleteApplication = async (id) => {
     if (window.confirm("Are you sure you want to delete this application?")) {
       try {
-        await axios.delete(`https://internship-tracker-z3x4.onrender.com/applications/${id}`);
+        await apiClient.delete(`/applications/${id}`);
         setApplications(applications.filter(app => app.id !== id));
       } catch (err) {
         console.error("Delete failed:", err);
@@ -34,7 +34,7 @@ const Dashboard = () => {
 
   const updateStatus = async (id, newStatus) => {
     try {
-      await axios.put(`https://internship-tracker-z3x4.onrender.com/applications/${id}`, {
+      await apiClient.put(`/applications/${id}`, {
         status: newStatus
       });
       setApplications(applications.map(app => 

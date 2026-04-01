@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import { apiClient } from '../api';
 
 const AddInternship = ({ onAdd }) => {
   const [formData, setFormData] = useState({
@@ -16,8 +16,9 @@ const AddInternship = ({ onAdd }) => {
       const token = localStorage.getItem('token');
       // Note: We are using user_id 1 for now. 
       // Later we will decode the token to get the real ID!
-      const res = await axios.post('https://internship-tracker-z3x4.onrender.com/applications', 
-        { ...formData, user_id: 1 }, 
+      const res = await apiClient.post(
+        '/applications',
+        { ...formData, user_id: 1 },
         { headers: { token: token } }
       );
       

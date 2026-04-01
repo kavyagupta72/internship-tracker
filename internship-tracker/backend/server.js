@@ -6,12 +6,24 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const allowedOrigins = [
+  "https://internship-tracker-mu.vercel.app",
   "https://your-frontend-url.vercel.app",
   "https://internship-tracker.vercel.app"
 ];
 
 if (process.env.FRONTEND_URL) {
-  allowedOrigins.push(process.env.FRONTEND_URL);
+  const u = process.env.FRONTEND_URL.replace(/\/$/, "");
+  if (!allowedOrigins.includes(u)) allowedOrigins.push(u);
+}
+
+function isVercelAppOrigin(origin) {
+  if (!origin || !origin.startsWith("https://")) return false;
+  try {
+    const { hostname } = new URL(origin);
+    return hostname === "vercel.app" || hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
 }
 
 app.use(
@@ -22,7 +34,12 @@ app.use(
         /^http:\/\/localhost:\d+$/.test(origin || "") ||
         /^http:\/\/127\.0\.0\.1:\d+$/.test(origin || "");
 
-      if (!origin || isLocalhost || allowedOrigins.includes(origin)) {
+      if (
+        !origin ||
+        isLocalhost ||
+        allowedOrigins.includes(origin) ||
+        isVercelAppOrigin(origin)
+      ) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));

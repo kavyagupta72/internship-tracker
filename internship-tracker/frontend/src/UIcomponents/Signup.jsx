@@ -24,7 +24,7 @@ const Signup = () => {
     } catch (err) {
       const errorMessage = err.response?.data
         || (err.code === 'ECONNABORTED'
-          ? 'Request timed out. Please check if backend is running on localhost:5000.'
+          ? 'Request timed out. Check that the API server is reachable.'
           : err.message)
         || 'Signup failed. Please try again.';
       setFeedback(errorMessage);

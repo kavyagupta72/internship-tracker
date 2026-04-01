@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { apiClient } from '../api';
 
 const ApplicationDetails = () => {
   const { id } = useParams();
@@ -11,7 +11,7 @@ const ApplicationDetails = () => {
 
   const fetchDetails = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/applications/detail/${id}`);
+      const response = await apiClient.get(`/applications/detail/${id}`);
       const data = response.data;
       const safeData = {
         ...data,
@@ -32,7 +32,7 @@ const ApplicationDetails = () => {
 
   const handleSave = async () => {
     try {
-      await axios.put(`https://internship-tracker-z3x4.onrender.com/applications/${id}`, editData);
+      await apiClient.put(`/applications/${id}`, editData);
       setDetails(editData);
       setIsEditing(false); // Switch back to view mode
       alert("Changes saved!");
@@ -118,7 +118,7 @@ const ApplicationDetails = () => {
           <button 
             onClick={async () => {
               if(window.confirm("Delete this?")) {
-                await axios.delete(`https://internship-tracker-z3x4.onrender.com/applications/${id}`);
+                await apiClient.delete(`/applications/${id}`);
                 navigate('/dashboard');
               }
             }}
