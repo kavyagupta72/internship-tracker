@@ -22,11 +22,17 @@ const Signup = () => {
       setFeedback('Signup successful. Redirecting...');
       navigate('/dashboard');
     } catch (err) {
-      const errorMessage = err.response?.data
-        || (err.code === 'ECONNABORTED'
-          ? 'Request timed out. Check that the API server is reachable.'
-          : err.message)
-        || 'Signup failed. Please try again.';
+      const body = err.response?.data;
+      const fromApi =
+        typeof body === "string"
+          ? body
+          : body?.error || body?.message;
+      const errorMessage =
+        fromApi ||
+        (err.code === "ECONNABORTED"
+          ? "Request timed out. Check that the API server is reachable."
+          : err.message) ||
+        "Signup failed. Please try again.";
       setFeedback(errorMessage);
       alert(errorMessage);
     } finally {

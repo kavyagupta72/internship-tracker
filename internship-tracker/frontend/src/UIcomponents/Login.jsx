@@ -14,8 +14,9 @@ const Login = () => {
       localStorage.setItem('token', res.data.token);
       navigate('/dashboard');
     } catch (err) {
+      const body = err.response?.data;
       const errorMessage =
-        err.response?.data ||
+        (typeof body === "string" ? body : body?.error || body?.message) ||
         err.message ||
         "Invalid credentials";
       alert(errorMessage);

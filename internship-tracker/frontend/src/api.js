@@ -15,12 +15,19 @@ function looksLikeLocalApi(url) {
   return /localhost|127\.0\.0\.1/.test(url);
 }
 
+/** Strips accidental `/auth` or `/auth/signup` so requests hit `/auth/signup` once, not `/auth/auth/signup`. */
+function normalizeRootApiUrl(url) {
+  if (!url) return url;
+  return url.trim().replace(/\/$/, "").replace(/\/auth(?:\/.*)?$/i, "");
+}
+
 /**
  * Picks API URL so HTTPS deployments never call http://localhost (mixed content — blocked, no Network row).
  */
 function resolveApiBaseUrl() {
   const raw = import.meta.env.VITE_API_BASE_URL;
-  const envUrl = typeof raw === "string" ? raw.trim().replace(/\/$/, "") : "";
+  const envUrl =
+    typeof raw === "string" ? normalizeRootApiUrl(raw.trim()) : "";
 
   if (envUrl) {
     if (
