@@ -26,7 +26,8 @@ const Signup = () => {
       const fromApi =
         typeof body === "string"
           ? body
-          : body?.error || body?.message;
+          : [body?.error, body?.hint, body?.message].filter(Boolean).join(" — ") ||
+            body?.detail;
       const errorMessage =
         fromApi ||
         (err.code === "ECONNABORTED"
