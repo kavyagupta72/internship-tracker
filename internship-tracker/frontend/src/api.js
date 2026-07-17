@@ -1,8 +1,5 @@
 import axios from "axios";
 
-/** Production API (Render). Override with VITE_API_BASE_URL in Vercel if the URL changes. */
-export const PRODUCTION_API = "https://internship-tracker-1-q568.onrender.com";
-
 const LOCAL_API = "http://localhost:5000";
 
 function isBrowserLocalhost() {
@@ -11,50 +8,32 @@ function isBrowserLocalhost() {
   return h === "localhost" || h === "127.0.0.1" || h === "[::1]";
 }
 
-function looksLikeLocalApi(url) {
-  return /localhost|127\.0\.0\.1/.test(url);
-}
-
 /** Strips accidental `/auth` or `/auth/signup` so requests hit `/auth/signup` once, not `/auth/auth/signup`. */
 function normalizeRootApiUrl(url) {
   if (!url) return url;
   return url.trim().replace(/\/$/, "").replace(/\/auth(?:\/.*)?$/i, "");
 }
 
-/**
- * Picks API URL so HTTPS deployments never call http://localhost (mixed content — blocked, no Network row).
- */
+/** Uses env override when present, otherwise defaults to local backend. */
 function resolveApiBaseUrl() {
   const raw = import.meta.env.VITE_API_BASE_URL;
   const envUrl =
     typeof raw === "string" ? normalizeRootApiUrl(raw.trim()) : "";
 
-  if (envUrl) {
-    if (
-      typeof window !== "undefined" &&
-      window.location.protocol === "https:" &&
-      looksLikeLocalApi(envUrl)
-    ) {
-      console.warn(
-        "[api] Ignoring VITE_API_BASE_URL pointing to localhost on an HTTPS page (mixed content). Using production API."
-      );
-      return PRODUCTION_API;
-    }
-    return envUrl;
-  }
-
-  if (isBrowserLocalhost()) {
-    return LOCAL_API;
-  }
-
-  return PRODUCTION_API;
+  if (envUrl) return envUrl;
+  if (isBrowserLocalhost()) return LOCAL_API;
+  return LOCAL_API;
 }
 
 export const API_BASE_URL = resolveApiBaseUrl();
 
 export const apiUrl = (path) => `${API_BASE_URL}${path}`;
 
+const isLocalApiHost =
+  API_BASE_URL.includes("localhost") || API_BASE_URL.includes("127.0.0.1");
+const remoteTimeoutMs = Number(import.meta.env.VITE_API_TIMEOUT_MS) || 10_000;
+
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000
+  timeout: isLocalApiHost ? 10_000 : remoteTimeoutMs,
 });

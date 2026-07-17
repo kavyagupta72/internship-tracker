@@ -12,7 +12,7 @@ const Home = () => {
         alignItems: 'center',
         borderBottom: '1px solid #eee' 
       }}>
-        <h2 style={{ color: '#007bff', margin: 0 }}>🚀 InternTracker</h2>
+        <h2 style={{ color: '#007bff', margin: 0 }}>InternTracker</h2>
         <div>
           <Link to="/login" style={{ marginRight: '20px', textDecoration: 'none', color: '#555', fontWeight: 'bold' }}>Login</Link>
           <Link to="/signup" style={{ 

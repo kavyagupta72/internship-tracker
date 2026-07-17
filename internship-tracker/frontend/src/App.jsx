@@ -19,7 +19,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected Route: Only accessible if logged in */}
+          {/* Protected Route*/}
           <Route 
             path="/dashboard" 
             element={
@@ -33,11 +33,10 @@ function App() {
             path="/application/:id" 
             element={
               <ProtectedRoute>
-                <ApplicationDetails />
+                <ApplicationDetails/>
               </ProtectedRoute>
             } 
           />
-
           {/* Redirect any unknown path or the root path to Login */}
           <Route path="/" element={<Home />} />
         </Routes>

@@ -12,42 +12,108 @@ const AddInternship = ({ onAdd }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const token = localStorage.getItem('token');
-      // Note: We are using user_id 1 for now. 
-      // Later we will decode the token to get the real ID!
-      const res = await apiClient.post(
+
+      await apiClient.post(
         '/applications',
-        { ...formData, user_id: 1 },
-        { headers: { token: token } }
+        formData,
+        {
+          headers: {
+            token
+          }
+        }
       );
-      
+
       alert("Added successfully!");
-      onAdd(); // This refreshes the list on the dashboard
+
+      setFormData({
+        company_name: '',
+        role: '',
+        status: 'Applied',
+        stipend: '',
+        location: ''
+      });
+
+      onAdd();
     } catch (err) {
-      console.error(err);
+      console.error("Failed to add application:", err);
+      alert("Failed to add application");
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="add-form">
       <h3>Add New Internship</h3>
-      <input type="text" placeholder="Company" required 
-        onChange={e => setFormData({...formData, company_name: e.target.value})} />
-      <input type="text" placeholder="Role" required 
-        onChange={e => setFormData({...formData, role: e.target.value})} />
-      <input type="text" placeholder="Stipend (optional)" 
-        onChange={e => setFormData({...formData, stipend: e.target.value})} />
-      <select 
-        value={formData.status} 
-        onChange={e => setFormData({...formData, status: e.target.value})}
+
+      <input
+        type="text"
+        placeholder="Company"
         required
-        >
+        value={formData.company_name}
+        onChange={e =>
+          setFormData({
+            ...formData,
+            company_name: e.target.value
+          })
+        }
+      />
+
+      <input
+        type="text"
+        placeholder="Role"
+        required
+        value={formData.role}
+        onChange={e =>
+          setFormData({
+            ...formData,
+            role: e.target.value
+          })
+        }
+      />
+
+      <input
+        type="text"
+        placeholder="Stipend (optional)"
+        value={formData.stipend}
+        onChange={e =>
+          setFormData({
+            ...formData,
+            stipend: e.target.value
+          })
+        }
+      />
+
+      <input
+        type="text"
+        placeholder="Location (optional)"
+        value={formData.location}
+        onChange={e =>
+          setFormData({
+            ...formData,
+            location: e.target.value
+          })
+        }
+      />
+
+      <select
+        value={formData.status}
+        onChange={e =>
+          setFormData({
+            ...formData,
+            status: e.target.value
+          })
+        }
+        required
+      >
         <option value="Applied">Applied</option>
         <option value="Interview Round-1">Interview Round-1</option>
         <option value="Interview Round-2">Interview Round-2</option>
         <option value="Selected">Selected</option>
-        </select>
+        <option value="Rejected">Rejected</option>
+      </select>
+
       <button type="submit">Add to List</button>
     </form>
   );

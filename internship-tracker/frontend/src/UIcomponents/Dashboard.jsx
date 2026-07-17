@@ -11,10 +11,9 @@ const Dashboard = () => {
   const fetchApplications = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Using user_id 1 for now until we handle dynamic IDs
-      const response = await apiClient.get('/applications/1', {
-        headers: { token: token }
-      });
+      const response = await apiClient.get('/applications', {
+      headers: { token }
+    });
       setApplications(response.data);
     } catch (err) {
       console.error("Error fetching data:", err);

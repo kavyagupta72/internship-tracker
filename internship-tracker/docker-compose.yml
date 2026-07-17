@@ -1,0 +1,19 @@
+# Optional: local Postgres when you do not use the PostgreSQL installer.
+# Usage: docker compose up -d
+# Then set in backend/.env.local:
+#   DATABASE_URL=postgresql://postgres:postgres@localhost:5432/internship_tracker
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: internship_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - internship_tracker_pg:/var/lib/postgresql/data
+
+volumes:
+  internship_tracker_pg:

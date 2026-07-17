@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { apiClient } from '../api';
+import { apiClient, API_BASE_URL } from '../api';
 
 const Signup = () => {
   const [formData, setFormData] = useState({ username: '', email: '', password: '' });
@@ -28,11 +28,19 @@ const Signup = () => {
           ? body
           : [body?.error, body?.hint, body?.message].filter(Boolean).join(" — ") ||
             body?.detail;
+      const noResponse = !err.response;
+      const isUnreachable =
+        noResponse &&
+        (err.code === "ERR_NETWORK" ||
+          err.message === "Network Error" ||
+          err.code === "ECONNREFUSED");
       const errorMessage =
         fromApi ||
-        (err.code === "ECONNABORTED"
-          ? "Request timed out. Check that the API server is reachable."
-          : err.message) ||
+        (isUnreachable
+          ? `Cannot reach the API at ${API_BASE_URL}. Start the backend (cd backend && npm start) and fix DATABASE_URL if the server exits on startup.`
+          : err.code === "ECONNABORTED"
+            ? "Request timed out. If the API is on Render free tier, the first request after idle can take 1–2 minutes — try again. Otherwise check VITE_API_BASE_URL and that the service is running."
+            : err.message) ||
         "Signup failed. Please try again.";
       setFeedback(errorMessage);
       alert(errorMessage);

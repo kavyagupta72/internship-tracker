@@ -1,218 +1,97 @@
 const express = require('express');
 const cors = require('cors');
-const pool = require('./db');
+const pool = require('./config/db'); // Points to db.js inside config folder
 const app = express();
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 
+const authRoutes = require('./src/routes/authRoutes');
+const appRoutes = require('./src/routes/appRoutes');
+
+// 1. CORS Configuration
 const allowedOrigins = [
-  "https://internship-tracker-mu.vercel.app",
-  "https://your-frontend-url.vercel.app",
-  "https://internship-tracker.vercel.app"
+  'https://your-production-frontend-url.com', // Replace with your real live URL
 ];
-
-if (process.env.FRONTEND_URL) {
-  const u = process.env.FRONTEND_URL.replace(/\/$/, "");
-  if (!allowedOrigins.includes(u)) allowedOrigins.push(u);
-}
-
-function isVercelAppOrigin(origin) {
-  if (!origin || !origin.startsWith("https://")) return false;
-  try {
-    const { hostname } = new URL(origin);
-    return hostname === "vercel.app" || hostname.endsWith(".vercel.app");
-  } catch {
-    return false;
-  }
-}
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow non-browser requests (Postman/cURL) and allowed frontend origins.
       const isLocalhost =
         /^http:\/\/localhost:\d+$/.test(origin || "") ||
         /^http:\/\/127\.0\.0\.1:\d+$/.test(origin || "");
 
-      if (
-        !origin ||
-        isLocalhost ||
-        allowedOrigins.includes(origin) ||
-        isVercelAppOrigin(origin)
-      ) {
+        // Allow if there is no origin (Postman/cURL), if it's localhost, or if it matches production allowed origins
+      if (!origin || isLocalhost || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
       return callback(new Error("Not allowed by CORS"));
     }
   })
 );
-app.use(express.json()); // Allows us to read JSON data sent by the frontend
 
-// ROUTE: Get all applications for a specific user
-app.get('/applications/:userId', async (req, res) => {
+app.use(express.json());
+
+// 2. Base Utility Routes
+app.get("/", (_req, res) => {
+  res.json({
+    ok: true,
+    service: "internship-tracker-api",
+    note: "Set DATABASE_URL to a valid postgresql:// connection string.",
+    try: ["/health"],
+  });
+});
+
+app.get("/health", async (_req, res) => {
   try {
-    const { userId } = req.params;
-    // We use $1 to prevent "SQL Injection" (a common hacking method)
-    const result = await pool.query(
-      "SELECT * FROM applications WHERE user_id = $1", 
-      [userId]
-    );
-    res.json(result.rows);
+    await pool.query("SELECT 1");
+    res.json({ ok: true, database: true });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
+    console.error("health check failed:", err);
+    res.status(503).json({ ok: false, database: false });
   }
 });
 
-app.post('/applications', async (req, res) => {
-  try {
-    // 1. Destructure the data coming from the frontend (req.body)
-    const { user_id, company_name, role, status, stipend, location } = req.body;
+// 3. API Route Modules
+app.use('/auth', authRoutes);               // Prepends '/auth' to signup/login
+app.use('/applications', appRoutes);       // Prepends '/applications' to CRUD endpoints
 
-    // 2. Insert into the database
-    // RETURNING * tells Postgres to send back the row it just created
-    const newApplication = await pool.query(
-      "INSERT INTO applications (user_id, company_name, role, status, stipend, location) VALUES($1, $2, $3, $4, $5, $6) RETURNING *",
-      [user_id, company_name, role, status, stipend, location]
-    );
-
-    // 3. Send the new data back to the frontend as confirmation
-    res.json(newApplication.rows[0]);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
-  }
-});
-
-// ROUTE: Get a single specific internship detail
-app.get('/applications/detail/:id', async (req, res) => {
-  try {
-    const { id } = req.params; // Grabs the ID from the URL (e.g., /applications/detail/5)
-    
-    const result = await pool.query(
-      "SELECT * FROM applications WHERE id = $1", 
-      [id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json("Application not found");
-    }
-
-    res.json(result.rows[0]); // Return only the first (and only) result
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
-  }
-});
-
-// ROUTE: Update an internship (e.g., change status from 'Applied' to 'Interviewing')
-app.put('/applications/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { status, stipend, notes } = req.body;
-
-    // We use COALESCE so that if you don't want to update a field, it keeps the old value
-    const updateApp = await pool.query(
-      "UPDATE applications SET status = $1, stipend = $2, notes = $3 WHERE id = $4 RETURNING *",
-      [status, stipend, notes, id]
-    );
-
-    res.json("Application was updated!");
-  } catch (err) {
-    console.error(err.message);
-  }
-});
-app.put('/applications/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { company_name, role, status, stipend, location, notes } = req.body;
-
-    await pool.query(
-      "UPDATE applications SET company_name = $1, role = $2, status = $3, stipend = $4, location = $5, notes = $6 WHERE id = $7",
-      [company_name, role, status, stipend, location, notes, id]
-    );
-
-    res.json("Updated successfully!");
-  } catch (err) {
-    console.error(err.message);
-  }
-});
-
-// ROUTE: Delete an internship
-app.delete('/applications/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    await pool.query("DELETE FROM applications WHERE id = $1", [id]);
-    
-    res.json("Application was deleted!");
-  } catch (err) {
-    console.error(err.message);
-  }
-});
-
-// ROUTE: User Registration (Signup)
-app.post('/auth/signup', async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-
-    // 1. Check if user already exists
-    const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    if (user.rows.length !== 0) {
-      return res.status(401).send("User already exists");
-    }
-
-    // 2. Hash the password (Salting)
-    // We do this so if your DB is hacked, the hacker can't see passwords.
-    const saltRound = 10;
-    const salt = await bcrypt.genSalt(saltRound);
-    const bcryptPassword = await bcrypt.hash(password, salt);
-
-    // 3. Save the user to the database
-    const newUser = await pool.query(
-      "INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *",
-      [username, email, bcryptPassword]
-    );
-
-    // 4. Generate a Token (The Digital ID Card)
-    const token = jwt.sign({ id: newUser.rows[0].id }, "SECRET_KEY_HERE", { expiresIn: "1h" });
-
-    res.json({ token });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
-  }
-});
-
-// ROUTE: User Login
-app.post('/auth/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // 1. Check if the user exists
-    const user = await pool.query("SELECT * FROM users WHERE email = $1", [email]);
-    
-    if (user.rows.length === 0) {
-      // 401 means "Unauthorized"
-      return res.status(401).json("Invalid Email or Password");
-    }
-
-    // 2. Check if the incoming password matches the Scrambled (Hashed) password in the DB
-    const validPassword = await bcrypt.compare(password, user.rows[0].password_hash);
-
-    if (!validPassword) {
-      return res.status(401).json("Invalid Email or Password");
-    }
-
-    // 3. If everything is correct, give them a Token
-    const token = jwt.sign({ id: user.rows[0].id }, "SECRET_KEY_HERE", { expiresIn: "1h" });
-
-    res.json({ token });
-
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server Error");
-  }
+// 4. 404 Fallback Middleware
+app.use((req, res) => {
+  res.status(404).json({
+    error: "Not found",
+    path: req.path,
+    hint: "This host is the REST API only. Try GET / or GET /health.",
+  });
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+function printDbStartupHelp(err) {
+  const code = err.code || err.errors?.[0]?.code;
+  console.error("\nDatabase schema init failed:", err.message || err);
+  if (code === "ETIMEDOUT" || code === "ECONNREFUSED") {
+    console.error(`
+Cannot reach PostgreSQL. Your backend/.env points at a remote host (e.g. Neon).
+Many networks block outbound port 5432, so the API never starts and signup shows "Network Error".
+
+Fix for local development:
+  1. Create backend/.env.local with:
+     DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/internship_tracker
+  2. Create the database:
+     CREATE DATABASE internship_tracker;
+  3. Restart: npm start
+`);
+  } else if (code === "28P01") {
+    console.error("\nWrong PostgreSQL password in DATABASE_URL. Update backend/.env.local and restart.\n");
+  } else if (code === "3D000") {
+    console.error('\nDatabase does not exist. Run: CREATE DATABASE internship_tracker;\n');
+  }
+}
+
+// 5. Database Connect & Server Start
+pool
+  .ensureSchema()
+  .then(() => {
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  })
+  .catch((err) => {
+    printDbStartupHelp(err);
+    process.exit(1);
+  });
