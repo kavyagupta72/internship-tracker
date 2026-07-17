@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import ThemeToggler from './ThemeToggler';
+import Profile from './Profile';
 
 const Navbar = () => {
+  const [showDropdown, setShowDropdown] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -10,40 +13,58 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '1rem 2rem',
-      backgroundColor: '#2c3e50', // Professional Dark Blue
-      color: 'white',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
-    }}>
-      <div style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
-        <Link to="/dashboard" style={{ color: 'white', textDecoration: 'none' }}>
-         InternTracker
-        </Link>
-      </div>
+    <nav className="navbar" style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #ccc' }}>
+      <h1>Internship Tracker</h1>
+      
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', position: 'relative' }}>
+        {/* Universal Theme Changer */}
+        <ThemeToggler />
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <span style={{ fontSize: '0.9rem', color: '#bdc3c7' }}>Welcome back!</span>
-        <button 
-          onClick={handleLogout}
-          style={{
-            backgroundColor: '#e74c3c', // Red
-            color: 'white',
-            border: 'none',
-            padding: '8px 16px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            transition: '0.3s'
-          }}
-          onMouseOver={(e) => e.target.style.backgroundColor = '#c0392b'}
-          onMouseOut={(e) => e.target.style.backgroundColor = '#e74c3c'}
+        {/* Clickable Profile Avatar Icon */}
+        <div 
+          onClick={() => setShowDropdown(!showDropdown)} 
+          style={{ cursor: 'pointer', fontSize: '24px', userSelect: 'none' }}
+          title="Account Menu"
         >
-          Logout
-        </button>
+          👤
+        </div>
+
+        {/* Dropdown Card */}
+        {showDropdown && (
+          <div className="dropdown-menu" style={{
+            position: 'absolute',
+            top: '40px',
+            right: '0px',
+            background: 'var(--bg-color)',
+            color: 'var(--text-color)',
+            border: '1px solid #ccc',
+            borderRadius: '8px',
+            padding: '15px',
+            boxShadow: '0px 4px 12px rgba(0,0,0,0.15)',
+            zIndex: 1000,
+            minWidth: '280px'
+          }}>
+            {/* Renders the profile summary, email view, and password change options directly here */}
+            <Profile />
+            
+            <hr style={{ margin: '15px 0', borderColor: '#eee' }} />
+            
+            <button 
+              onClick={handleLogout} 
+              style={{
+                width: '100%',
+                padding: '8px',
+                background: '#ff4d4d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     </nav>
   );

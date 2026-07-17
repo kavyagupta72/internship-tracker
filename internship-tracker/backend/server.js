@@ -5,6 +5,7 @@ const app = express();
 
 const authRoutes = require('./src/routes/authRoutes');
 const appRoutes = require('./src/routes/appRoutes');
+const userRoutes = require('./src/routes/userRoutes');
 
 // 1. CORS Configuration
 const allowedOrigins = [
@@ -51,6 +52,7 @@ app.get("/health", async (_req, res) => {
 // 3. API Route Modules
 app.use('/auth', authRoutes);               // Prepends '/auth' to signup/login
 app.use('/applications', appRoutes);       // Prepends '/applications' to CRUD endpoints
+app.use('/users', userRoutes);
 
 // 4. 404 Fallback Middleware
 app.use((req, res) => {

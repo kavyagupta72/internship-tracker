@@ -1,3 +1,43 @@
+/* Top of your index.css or App.css file */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+}
+[data-theme='dark'] {
+  --bg-color: #1a1a1a;
+  --text-color: #f5f5f5;
+}
+/* Update your existing theme blocks to make sure cards use the right background color */
+:root {
+  --bg-color: #ffffff;
+  --text-color: #333333;
+}
+
+[data-theme='dark'] {
+  --bg-color: #1a1a1a;
+  --text-color: #f5f5f5;
+}
+
+/* Add style rule for the dropdown modal container */
+.dropdown-menu {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+/* Minor clean up for input styling inside profile view */
+.dropdown-menu input {
+  width: 100%;
+  padding: 6px;
+  margin: 5px 0;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background 0.3s ease, color 0.3s ease;
+}
 .auth-container {
   max-width: 400px;
   margin: 100px auto;
@@ -29,4 +69,68 @@ button {
 
 button:hover {
   background-color: #0056b3;
+}
+/* ==========================================
+   DARK MODE CONFIGURATION 
+   ========================================== */
+
+/* 1. Define global color variables for light theme (default) */
+:root {
+  --body-bg: #f8f9fa;
+  --card-bg: #ffffff;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --border-color: #e0e0e0;
+}
+
+/* 2. Overwrite variables when dark mode is toggled on */
+[data-theme='dark'] {
+  --body-bg: #121212;
+  --card-bg: #1e1e1e;
+  --text-primary: #f5f5f5;
+  --text-secondary: #b0b0b0;
+  --border-color: #333333;
+}
+
+/* 3. Apply variables to the foundational tags */
+body {
+  background-color: var(--body-bg) !important;
+  color: var(--text-primary) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 4. Force your dashboard cards and elements to listen to the variables */
+.navbar, 
+header,
+nav {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Targets the individual internship cards (like the Amazon/Google blocks) */
+.card, 
+[class*="card"], 
+.internship-item,
+div[style*="background"] {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
+}
+
+/* Targets heading texts globally inside dark mode */
+h1, h2, h3, h4, h5, h6, p, span, label {
+  color: var(--text-primary) !important;
+}
+
+/* Targets the profile dropdown menu container specifically */
+.dropdown-menu {
+  background-color: var(--card-bg) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+/* Subtle adjustment to make subtext input labels readable */
+.card p, .card span {
+  color: var(--text-secondary) !important;
 }
