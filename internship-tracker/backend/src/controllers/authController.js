@@ -36,9 +36,11 @@ function signupErrorResponse(err) {
 }
 
 exports.signup = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { username, email, password } = req.body || {};
 
+    // Validation of user input
     if (
       typeof username !== "string" ||
       typeof email !== "string" ||
@@ -54,28 +56,41 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ error: "Password must be at most 72 bytes" });
     }
 
-    const user = await pool.query(
+    // Start Transaction
+    await client.query('BEGIN');
+
+    // Checking if user already exists in the db
+    const user = await client.query(
       "SELECT * FROM public.users WHERE LOWER(TRIM(email)) = $1",
       [email.trim().toLowerCase()]
     );
+    
     if (user.rows.length !== 0) {
+      await client.query('ROLLBACK');
       return res.status(401).json({ error: "User already exists" });
     }
 
+    // Hashing the password before storing in db
     const saltRound = 10;
     const salt = await bcrypt.genSalt(saltRound);
     const bcryptPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await pool.query(
+    // Inserting into the db
+    const newUser = await client.query(
       "INSERT INTO public.users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING *",
       [username.trim(), email.trim().toLowerCase(), bcryptPassword]
     );
 
+    // Commit Transaction
+    await client.query('COMMIT');
+
+    // Generating JWT token for newly signed up user
     const secret = (process.env.JWT_SECRET || "SECRET_KEY_HERE").trim();
     const token = jwt.sign({ id: newUser.rows[0].id }, secret, { expiresIn: "1h" });
 
     res.json({ token });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error("signup error:", {
       message: err.message,
       code: err.code,
@@ -90,6 +105,8 @@ exports.signup = async (req, res) => {
         ? { error: "Server Error", detail: err.message }
         : { error: "Server Error" };
     res.status(500).json(expose);
+  } finally {
+    client.release();
   }
 };
 

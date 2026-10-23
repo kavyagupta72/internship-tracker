@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const rateLimit = require('express-rate-limit'); // 1. Import rate limiter
 const pool = require('./config/db'); // Points to db.js inside config folder
 const app = express();
 
@@ -18,7 +19,7 @@ app.use(
         /^http:\/\/localhost:\d+$/.test(origin || "") ||
         /^http:\/\/127\.0\.0\.1:\d+$/.test(origin || "");
 
-        // Allow if there is no origin (Postman/cURL), if it's localhost, or if it matches production allowed origins
+      // Allow if there is no origin (Postman/cURL), if it's localhost, or if it matches production allowed origins
       if (!origin || isLocalhost || allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
@@ -27,9 +28,27 @@ app.use(
   })
 );
 
+// 2. Rate Limiter Configuration
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many requests from this IP, please try again after 15 minutes" }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limit each IP to 10 login/signup attempts per windowMs
+  message: { error: "Too many login/signup attempts from this IP, please try again after 15 minutes" }
+});
+
+// Apply global rate limiter to all incoming requests
+app.use(globalLimiter);
+
 app.use(express.json());
 
-// 2. Base Utility Routes
+// 3. Base Utility Routes
 app.get("/", (_req, res) => {
   res.json({
     ok: true,
@@ -49,12 +68,12 @@ app.get("/health", async (_req, res) => {
   }
 });
 
-// 3. API Route Modules
-app.use('/auth', authRoutes);               // Prepends '/auth' to signup/login
-app.use('/applications', appRoutes);       // Prepends '/applications' to CRUD endpoints
+// 4. API Route Modules (Apply strict authLimiter specifically to /auth routes)
+app.use('/auth', authLimiter, authRoutes);              // Prepends '/auth' with brute-force protection
+app.use('/applications', appRoutes);      // Prepends '/applications' to CRUD endpoints
 app.use('/users', userRoutes);
 
-// 4. 404 Fallback Middleware
+// 5. 404 Fallback Middleware
 app.use((req, res) => {
   res.status(404).json({
     error: "Not found",
@@ -87,7 +106,7 @@ Fix for local development:
   }
 }
 
-// 5. Database Connect & Server Start
+// 6. Database Connect & Server Start
 pool
   .ensureSchema()
   .then(() => {

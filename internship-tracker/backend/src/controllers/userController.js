@@ -6,7 +6,6 @@ exports.getProfile = async (req, res) => {
   try {
     const userId = req.user.id;
     
-    // Select only what we need; NEVER select password_hash for a read-only profile request
     const userResult = await pool.query(
       "SELECT id, username, email FROM public.users WHERE id = $1",
       [userId]
@@ -23,8 +22,9 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-// 2. Change password securely
+// 2. Change password securely using a transaction
 exports.changePassword = async (req, res) => {
+  const client = await pool.connect();
   try {
     const userId = req.user.id;
     const { currentPassword, newPassword } = req.body;
@@ -33,13 +33,17 @@ exports.changePassword = async (req, res) => {
       return res.status(400).json({ error: "Both current and new passwords are required." });
     }
 
+    // Start Transaction
+    await client.query('BEGIN');
+
     // A. Retrieve the user's existing hashed password
-    const userResult = await pool.query(
+    const userResult = await client.query(
       "SELECT password_hash FROM public.users WHERE id = $1",
       [userId]
     );
 
     if (userResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -48,11 +52,13 @@ exports.changePassword = async (req, res) => {
     // B. Verify current password matches
     const isMatch = await bcrypt.compare(currentPassword, password_hash);
     if (!isMatch) {
+      await client.query('ROLLBACK');
       return res.status(401).json({ error: "Incorrect current password" });
     }
 
     // C. Validate new password length
     if (Buffer.byteLength(newPassword, "utf8") > 72) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ error: "Password must be at most 72 bytes" });
     }
 
@@ -61,14 +67,20 @@ exports.changePassword = async (req, res) => {
     const salt = await bcrypt.genSalt(saltRound);
     const hashedNewPassword = await bcrypt.hash(newPassword, salt);
 
-    await pool.query(
+    await client.query(
       "UPDATE public.users SET password_hash = $1 WHERE id = $2",
       [hashedNewPassword, userId]
     );
 
+    // Commit Transaction
+    await client.query('COMMIT');
+
     res.json({ message: "Password updated successfully!" });
   } catch (err) {
+    await client.query('ROLLBACK');
     console.error(err.message);
     res.status(500).send("Server Error");
+  } finally {
+    client.release();
   }
 };

@@ -59,7 +59,6 @@ exports.updateApplication = async (req, res) => {
     const { id } = req.params;
     const { company_name, role, status, stipend, location, notes } = req.body;
 
-    // Consolidating your routes to ensure all update values are handled gracefully
     await pool.query(
       "UPDATE public.applications SET company_name = $1, role = $2, status = $3, stipend = $4, location = $5, notes = $6 WHERE id = $7",
       [company_name, role, status, stipend, location, notes, id]
